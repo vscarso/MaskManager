@@ -143,7 +143,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Utilitarios', [TMaskManager]);
+  RegisterComponents('VSComponente', [TMaskManager]);
 end;
 
 end.
