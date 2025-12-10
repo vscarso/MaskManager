@@ -9,7 +9,7 @@ Ele foi criado para simplificar a manutenção de projetos que possuem muitas qu
 🚀 Funcionalidades
 ✅ Máscara padrão para todos os campos numéricos.
 
-✅ Regras específicas por Tabela + Campo.
+✅ Regras específicas por DataSet + Campo.
 
 ✅ Configuração direta pelo Object Inspector.
 
@@ -28,20 +28,22 @@ Adicione a unit uMaskManager.pas ao pacote.
 
 Compile e instale o pacote.
 
-O componente TMaskManager aparecerá na paleta Utilitários.
+O componente TMaskManager aparecerá na paleta VSComponents.
 
 🔧 Propriedades
-MascaraPadrao Define a máscara padrão aplicada a todos os campos numéricos. Exemplo: '0.00'.
+MascaraPadraoDisplay Define a máscara padrão aplicada a todos os campos numéricos para exibição. Exemplo: #,##0.00.
+
+MascaraPadraoEdit Define a máscara padrão aplicada a todos os campos numéricos para edição. Exemplo: 0.00.
 
 Regras Coleção de regras específicas. Cada regra possui:
 
-Tabela: nome do DataSet (ex.: FDNfeItens).
+Tabela: Name do componente DataSet no Lazarus (ex.: FDNfeItens). ⚠️ Importante: não é o nome da tabela do banco de dados, mas sim o Name do componente no Object Inspector.
 
-Campo: nome do campo (ex.: QTD).
+Campo: nome do campo (FieldName) exatamente como aparece no FieldsEditor ou no DBGrid.
 
-DisplayFormat: máscara de exibição (ex.: '0.000').
+DisplayFormat: máscara de exibição (ex.: #,##0.000).
 
-EditFormat: máscara de edição (ex.: '0.###').
+EditFormat: máscara de edição (ex.: 0.###).
 
 📋 Métodos
 RegistrarDataSet(ADataSet: TDataSet) Registra um dataset para que o MaskManager aplique máscaras nele. O componente intercepta o AfterOpen e aplica as regras automaticamente.
@@ -51,22 +53,21 @@ pascal
 procedure TDataModule1.DataModuleCreate(Sender: TObject);
 begin
   // Configuração padrão
-  MaskManager1.MascaraPadrao := '0.00';
+  MaskManager1.MascaraPadraoDisplay := '#,##0.00';
+  MaskManager1.MascaraPadraoEdit := '0.00';
 
   // Regras específicas
   MaskManager1.Regras.AddRegra('FDNfeItens', 'QTD', '0.000', '0.###');
-  MaskManager1.Regras.AddRegra('FDNfe', 'VALORALIQUOTA', '0.0000', '0.####');
+  MaskManager1.Regras.AddRegra('FDNfe', 'VALORALIQUOTA', '#,##0.0000', '0.0000');
 
-  // Registrar datasets
+  // Registrar datasets (Name do componente, não nome da tabela)
   MaskManager1.RegistrarDataSet(FDNfe);
   MaskManager1.RegistrarDataSet(FDNfeItens);
 end;
-Agora, toda vez que o dataset abrir (Open), as máscaras serão aplicadas automaticamente, tanto para exibição quanto para edição.
-
 🎯 Benefícios
 Centralização: todas as máscaras ficam em um único componente.
 
-Flexibilidade: regras específicas por tabela + campo.
+Flexibilidade: regras específicas por DataSet + Campo.
 
 Manutenção fácil: basta alterar no MaskManager.
 
@@ -75,77 +76,6 @@ Integração com Lazarus: configuração pelo Object Inspector.
 Automático: não precisa mais chamar AplicarMascaras manualmente.
 
 Completo: suporta DisplayFormat e EditFormat.
-Campo: nome do campo (ex.: QTD).
-
-Mascara: máscara a aplicar (ex.: '0.000').
-
-📋 Métodos
-RegistrarDataSet(ADataSet: TDataSet) Registra um dataset para que o MaskManager aplique máscaras nele. O componente intercepta o AfterOpen e aplica as regras automaticamente.
-
-🧑‍💻 Exemplo de uso
-pascal
-procedure TDataModule1.DataModuleCreate(Sender: TObject);
-begin
-  // Configuração padrão
-  MaskManager1.MascaraPadrao := '0.00';
-
-  // Regras específicas
-  MaskManager1.Regras.AddRegra('FDNfeItens', 'QTD', '0.000');
-  MaskManager1.Regras.AddRegra('FDNfe', 'VALORALIQUOTA', '0.0000');
-
-  // Registrar datasets
-  MaskManager1.RegistrarDataSet(FDNfe);
-  MaskManager1.RegistrarDataSet(FDNfeItens);
-end;
-Agora, toda vez que o dataset abrir (Open), as máscaras serão aplicadas automaticamente.
-
-🎯 Benefícios
-Centralização: todas as máscaras ficam em um único componente.
-
-Flexibilidade: regras específicas por tabela + campo.
-
-Manutenção fácil: basta alterar no MaskManager.
-
-Integração com Lazarus: configuração pelo Object Inspector.
-
-Automático: não precisa mais chamar AplicarMascaras manualmente.
-
-Máscaras numéricas úteis
-Inteiro sem separador: 0
-
-1 casa decimal fixa: 0.0
-
-2 casas decimais fixas (padrão dinheiro simples): 0.00
-
-3 casas decimais fixas (quantidade): 0.000
-
-Decimais opcionais (até 2): 0.##
-
-Milhar + 2 decimais: #,##0.00
-
-Milhar + 3 decimais: #,##0.000
-
-Sem zeros à esquerda (inteiros): #
-
-Positivo/negativo diferentes: #,##0.00; -#,##0.00
-
-Positivo/negativo/zero diferentes: #,##0.00; -#,##0.00; '-'
-
-Percurso com símbolo de porcentagem: 0.00% (mostra 12.34% para 0.1234)
-
-Formato técnico com expoente (exibição, não edição): 0.###E+00
-
-Dicas:
-
-0 força dígito; # torna opcional.
-
-, é separador de milhares; . é separador decimal na máscara (o output respeita sua regionalização).
-
-Use as variações com “;” para tratar negativo/zero.
-
-Exportar/importar regras em JSON/INI.
-
-Aplicação automática também em AfterScroll e outros eventos.
 
 👨‍💻 Autor
 Criado por Vitor Scarso Publicado sob licença MIT.
