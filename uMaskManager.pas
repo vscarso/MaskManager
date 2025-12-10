@@ -13,17 +13,19 @@ type
   private
     FTabela: string;
     FCampo: string;
-    FMascara: string;
+    FDisplay: string;
+    FEdit: string;
   published
     property Tabela: string read FTabela write FTabela;
     property Campo: string read FCampo write FCampo;
-    property Mascara: string read FMascara write FMascara;
+    property DisplayFormat: string read FDisplay write FDisplay;
+    property EditFormat: string read FEdit write FEdit;
   end;
 
   // Coleção de regras
   TListaRegras = class(TCollection)
   public
-    function AddRegra(const ATabela, ACampo, AMascara: string): TRegraMascara;
+    function AddRegra(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
   end;
 
   // Estrutura auxiliar para guardar dataset + evento original
@@ -55,12 +57,13 @@ implementation
 
 { TListaRegras }
 
-function TListaRegras.AddRegra(const ATabela, ACampo, AMascara: string): TRegraMascara;
+function TListaRegras.AddRegra(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
 begin
   Result := TRegraMascara(Add);
   Result.Tabela := ATabela;
   Result.Campo := ACampo;
-  Result.Mascara := AMascara;
+  Result.DisplayFormat := ADisplay;
+  Result.EditFormat := AEdit;
 end;
 
 { TMaskManager }
@@ -102,17 +105,26 @@ var
   i, k: Integer;
   Info: TDataSetInfo;
 begin
-  // aplica máscaras
+  // aplica máscara padrão
   for f in DataSet.Fields do
   begin
     if (f is TFloatField) or (f is TBCDField) or (f is TFMTBCDField) then
+    begin
       TFloatField(f).DisplayFormat := FMascaraPadrao;
+      TFloatField(f).EditFormat := FMascaraPadrao;
+    end;
 
+    // procura regra específica
     for k := 0 to FRegras.Count - 1 do
     begin
       regra := TRegraMascara(FRegras.Items[k]);
       if SameText(regra.Tabela, DataSet.Name) and SameText(regra.Campo, f.FieldName) then
-        TFloatField(f).DisplayFormat := regra.Mascara;
+      begin
+        if regra.DisplayFormat <> '' then
+          TFloatField(f).DisplayFormat := regra.DisplayFormat;
+        if regra.EditFormat <> '' then
+          TFloatField(f).EditFormat := regra.EditFormat;
+      end;
     end;
   end;
 
@@ -131,7 +143,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('VSComponents', [TMaskManager]);
+  RegisterComponents('Utilitarios', [TMaskManager]);
 end;
 
 end.
