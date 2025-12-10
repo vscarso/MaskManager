@@ -17,7 +17,7 @@ type
     FEdit: string;
   published
     property Tabela: string read FTabela write FTabela;
-    property Campo: string read FCampo write FCampo;
+    property Campo: string read FCampo write FCampo; // corrigido
     property DisplayFormat: string read FDisplay write FDisplay;
     property EditFormat: string read FEdit write FEdit;
   end;
@@ -39,15 +39,18 @@ type
   TMaskManager = class(TComponent)
   private
     FDataSets: TList;
-    FMascaraPadrao: string;
+    FMascaraPadraoDisplay: string;
+    FMascaraPadraoEdit: string;
     FRegras: TListaRegras;
     procedure InternalAfterOpen(DataSet: TDataSet);
+    procedure ApplyFormatsToField(f: TField; const DisplayFmt, EditFmt: string);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure RegistrarDataSet(ADataSet: TDataSet);
   published
-    property MascaraPadrao: string read FMascaraPadrao write FMascaraPadrao;
+    property MascaraPadraoDisplay: string read FMascaraPadraoDisplay write FMascaraPadraoDisplay;
+    property MascaraPadraoEdit: string read FMascaraPadraoEdit write FMascaraPadraoEdit;
     property Regras: TListaRegras read FRegras write FRegras;
   end;
 
@@ -73,7 +76,8 @@ begin
   inherited Create(AOwner);
   FDataSets := TList.Create;
   FRegras := TListaRegras.Create(TRegraMascara);
-  FMascaraPadrao := '0.00'; // padrão inicial
+  FMascaraPadraoDisplay := '0.00'; // padrão inicial
+  FMascaraPadraoEdit := '0.00';
 end;
 
 destructor TMaskManager.Destroy;
@@ -98,6 +102,25 @@ begin
   FDataSets.Add(Info);
 end;
 
+procedure TMaskManager.ApplyFormatsToField(f: TField; const DisplayFmt, EditFmt: string);
+begin
+  if f is TFloatField then
+  begin
+    if DisplayFmt <> '' then TFloatField(f).DisplayFormat := DisplayFmt;
+    if EditFmt <> '' then TFloatField(f).EditFormat := EditFmt;
+  end
+  else if f is TBCDField then
+  begin
+    if DisplayFmt <> '' then TBCDField(f).DisplayFormat := DisplayFmt;
+    if EditFmt <> '' then TBCDField(f).EditFormat := EditFmt;
+  end
+  else if f is TFMTBCDField then
+  begin
+    if DisplayFmt <> '' then TFMTBCDField(f).DisplayFormat := DisplayFmt;
+    if EditFmt <> '' then TFMTBCDField(f).EditFormat := EditFmt;
+  end;
+end;
+
 procedure TMaskManager.InternalAfterOpen(DataSet: TDataSet);
 var
   f: TField;
@@ -107,24 +130,16 @@ var
 begin
   // aplica máscara padrão
   for f in DataSet.Fields do
-  begin
-    if (f is TFloatField) or (f is TBCDField) or (f is TFMTBCDField) then
-    begin
-      TFloatField(f).DisplayFormat := FMascaraPadrao;
-      TFloatField(f).EditFormat := FMascaraPadrao;
-    end;
+    ApplyFormatsToField(f, FMascaraPadraoDisplay, FMascaraPadraoEdit);
 
-    // procura regra específica
+  // aplica regras específicas
+  for f in DataSet.Fields do
+  begin
     for k := 0 to FRegras.Count - 1 do
     begin
       regra := TRegraMascara(FRegras.Items[k]);
       if SameText(regra.Tabela, DataSet.Name) and SameText(regra.Campo, f.FieldName) then
-      begin
-        if regra.DisplayFormat <> '' then
-          TFloatField(f).DisplayFormat := regra.DisplayFormat;
-        if regra.EditFormat <> '' then
-          TFloatField(f).EditFormat := regra.EditFormat;
-      end;
+        ApplyFormatsToField(f, regra.DisplayFormat, regra.EditFormat);
     end;
   end;
 
@@ -143,7 +158,8 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('VSComponente', [TMaskManager]);
+  RegisterComponents('VSComponents', [TMaskManager]); // ajustado para sua paleta
 end;
 
 end.
+
