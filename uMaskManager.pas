@@ -8,16 +8,18 @@ uses
   Classes, SysUtils, DB;
 
 type
-  // Item de regra: Tabela + Campo + Máscara
+  // Item de regra: Tabela + Campo + Máscaras
   TRegraMascara = class(TCollectionItem)
   private
     FTabela: string;
     FCampo: string;
     FDisplay: string;
     FEdit: string;
+  protected
+    function GetDisplayName: string; override; // mostra no Object Inspector
   published
-    property Tabela: string read FTabela write FTabela;
-    property Campo: string read FCampo write FCampo; // corrigido
+    property Tabela: string read FTabela write FTabela;    // Name do componente DataSet
+    property Campo: string read FCampo write FCampo;       // FieldName do campo
     property DisplayFormat: string read FDisplay write FDisplay;
     property EditFormat: string read FEdit write FEdit;
   end;
@@ -26,6 +28,8 @@ type
   TListaRegras = class(TCollection)
   public
     function AddRegra(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
+    procedure SortByCampo;
+    procedure SortByTabela;
   end;
 
   // Estrutura auxiliar para guardar dataset + evento original
@@ -58,6 +62,18 @@ procedure Register;
 
 implementation
 
+{ TRegraMascara }
+
+function TRegraMascara.GetDisplayName: string;
+begin
+  if (FCampo <> '') and (FTabela <> '') then
+    Result := FCampo + ' (' + FTabela + ')'
+  else if FCampo <> '' then
+    Result := FCampo
+  else
+    Result := inherited GetDisplayName;
+end;
+
 { TListaRegras }
 
 function TListaRegras.AddRegra(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
@@ -67,6 +83,48 @@ begin
   Result.Campo := ACampo;
   Result.DisplayFormat := ADisplay;
   Result.EditFormat := AEdit;
+end;
+
+procedure TListaRegras.SortByCampo;
+var
+  SL: TStringList;
+  i: Integer;
+begin
+  SL := TStringList.Create;
+  try
+    SL.Sorted := True;
+    SL.Duplicates := dupAccept;
+
+    for i := 0 to Count - 1 do
+      SL.AddObject(TRegraMascara(Items[i]).Campo, Items[i]);
+
+    Clear;
+    for i := 0 to SL.Count - 1 do
+      Add.Assign(TRegraMascara(SL.Objects[i]));
+  finally
+    SL.Free;
+  end;
+end;
+
+procedure TListaRegras.SortByTabela;
+var
+  SL: TStringList;
+  i: Integer;
+begin
+  SL := TStringList.Create;
+  try
+    SL.Sorted := True;
+    SL.Duplicates := dupAccept;
+
+    for i := 0 to Count - 1 do
+      SL.AddObject(TRegraMascara(Items[i]).Tabela, Items[i]);
+
+    Clear;
+    for i := 0 to SL.Count - 1 do
+      Add.Assign(TRegraMascara(SL.Objects[i]));
+  finally
+    SL.Free;
+  end;
 end;
 
 { TMaskManager }
@@ -158,8 +216,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('VSComponents', [TMaskManager]); // ajustado para sua paleta
+  RegisterComponents('VSComponents', [TMaskManager]); // paleta ajustada
 end;
 
 end.
-
