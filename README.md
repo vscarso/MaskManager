@@ -110,8 +110,38 @@ Integração com Lazarus: configuração pelo Object Inspector.
 
 Automático: não precisa mais chamar AplicarMascaras manualmente.
 
-📌 Roadmap futuro
-Suporte a outros tipos de campos (ex.: inteiros com formatação).
+Máscaras numéricas úteis
+Inteiro sem separador: 0
+
+1 casa decimal fixa: 0.0
+
+2 casas decimais fixas (padrão dinheiro simples): 0.00
+
+3 casas decimais fixas (quantidade): 0.000
+
+Decimais opcionais (até 2): 0.##
+
+Milhar + 2 decimais: #,##0.00
+
+Milhar + 3 decimais: #,##0.000
+
+Sem zeros à esquerda (inteiros): #
+
+Positivo/negativo diferentes: #,##0.00; -#,##0.00
+
+Positivo/negativo/zero diferentes: #,##0.00; -#,##0.00; '-'
+
+Percurso com símbolo de porcentagem: 0.00% (mostra 12.34% para 0.1234)
+
+Formato técnico com expoente (exibição, não edição): 0.###E+00
+
+Dicas:
+
+0 força dígito; # torna opcional.
+
+, é separador de milhares; . é separador decimal na máscara (o output respeita sua regionalização).
+
+Use as variações com “;” para tratar negativo/zero.
 
 Exportar/importar regras em JSON/INI.
 
