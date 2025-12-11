@@ -1,5 +1,11 @@
 unit uMaskManager;
 
+// Autor: Vitor Scarso
+// Descrição: Componente para aplicar DisplayFormat/EditFormat em campos numéricos,
+// com regras por DataSet (Name do componente) + FieldName, normalização case-insensitive,
+// ordenação e exportação/importação.
+// Paleta: VSComponents
+
 {$mode objfpc}{$H+}
 
 interface
@@ -11,15 +17,17 @@ type
   // Item de regra: Tabela + Campo + Máscaras
   TRegraMascara = class(TCollectionItem)
   private
-    FTabela: string;
-    FCampo: string;
+    FTabela: string;   // armazenado normalizado (UpperCase)
+    FCampo: string;    // armazenado normalizado (UpperCase)
     FDisplay: string;
     FEdit: string;
+    procedure SetTabela(const Value: string);
+    procedure SetCampo(const Value: string);
   protected
-    function GetDisplayName: string; override; // mostra no Object Inspector
+    function GetDisplayName: string; override; // "Campo (Tabela)" no Object Inspector
   published
-    property Tabela: string read FTabela write FTabela;    // Name do componente DataSet
-    property Campo: string read FCampo write FCampo;       // FieldName do campo
+    property Tabela: string read FTabela write SetTabela;    // Name do componente DataSet (case-insensitive)
+    property Campo: string read FCampo write SetCampo;       // FieldName (case-insensitive)
     property DisplayFormat: string read FDisplay write FDisplay;
     property EditFormat: string read FEdit write FEdit;
   end;
@@ -27,12 +35,18 @@ type
   // Coleção de regras
   TListaRegras = class(TCollection)
   public
-    function AddRegra(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
-    procedure SortByCampo;
-    procedure SortByTabela;
+    function Adicionar(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
+    procedure OrdenarPorCampo;
+    procedure OrdenarPorTabela;
+    procedure ExportarCSV(const Arquivo: string);
+    procedure ExportarINI(const Arquivo: string);
+    procedure ImportarCSV(const Arquivo: string);
+    procedure ImportarINI(const Arquivo: string);
+    procedure Salvar(const Arquivo: string);   // atalho para ExportarINI
+    procedure Carregar(const Arquivo: string); // atalho para ImportarINI
   end;
 
-  // Estrutura auxiliar para guardar dataset + evento original
+  // Guarda dataset + evento original
   TDataSetInfo = class
   public
     DataSet: TDataSet;
@@ -47,7 +61,7 @@ type
     FMascaraPadraoEdit: string;
     FRegras: TListaRegras;
     procedure InternalAfterOpen(DataSet: TDataSet);
-    procedure ApplyFormatsToField(f: TField; const DisplayFmt, EditFmt: string);
+    procedure AplicarFormatos(f: TField; const DisplayFmt, EditFmt: string);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -64,6 +78,16 @@ implementation
 
 { TRegraMascara }
 
+procedure TRegraMascara.SetTabela(const Value: string);
+begin
+  FTabela := UpperCase(Trim(Value));
+end;
+
+procedure TRegraMascara.SetCampo(const Value: string);
+begin
+  FCampo := UpperCase(Trim(Value));
+end;
+
 function TRegraMascara.GetDisplayName: string;
 begin
   if (FCampo <> '') and (FTabela <> '') then
@@ -76,16 +100,16 @@ end;
 
 { TListaRegras }
 
-function TListaRegras.AddRegra(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
+function TListaRegras.Adicionar(const ATabela, ACampo, ADisplay, AEdit: string): TRegraMascara;
 begin
   Result := TRegraMascara(Add);
-  Result.Tabela := ATabela;
-  Result.Campo := ACampo;
+  Result.Tabela := ATabela;   // setter normaliza
+  Result.Campo := ACampo;     // setter normaliza
   Result.DisplayFormat := ADisplay;
   Result.EditFormat := AEdit;
 end;
 
-procedure TListaRegras.SortByCampo;
+procedure TListaRegras.OrdenarPorCampo;
 var
   SL: TStringList;
   i: Integer;
@@ -94,10 +118,8 @@ begin
   try
     SL.Sorted := True;
     SL.Duplicates := dupAccept;
-
     for i := 0 to Count - 1 do
       SL.AddObject(TRegraMascara(Items[i]).Campo, Items[i]);
-
     Clear;
     for i := 0 to SL.Count - 1 do
       Add.Assign(TRegraMascara(SL.Objects[i]));
@@ -106,7 +128,7 @@ begin
   end;
 end;
 
-procedure TListaRegras.SortByTabela;
+procedure TListaRegras.OrdenarPorTabela;
 var
   SL: TStringList;
   i: Integer;
@@ -115,16 +137,118 @@ begin
   try
     SL.Sorted := True;
     SL.Duplicates := dupAccept;
-
     for i := 0 to Count - 1 do
       SL.AddObject(TRegraMascara(Items[i]).Tabela, Items[i]);
-
     Clear;
     for i := 0 to SL.Count - 1 do
       Add.Assign(TRegraMascara(SL.Objects[i]));
   finally
     SL.Free;
   end;
+end;
+
+procedure TListaRegras.ExportarCSV(const Arquivo: string);
+var
+  SL: TStringList;
+  i: Integer;
+  R: TRegraMascara;
+begin
+  SL := TStringList.Create;
+  try
+    SL.Add('Campo;Tabela;DisplayFormat;EditFormat');
+    for i := 0 to Count - 1 do
+    begin
+      R := TRegraMascara(Items[i]);
+      SL.Add(Format('%s;%s;%s;%s', [R.Campo, R.Tabela, R.DisplayFormat, R.EditFormat]));
+    end;
+    SL.SaveToFile(Arquivo);
+  finally
+    SL.Free;
+  end;
+end;
+
+procedure TListaRegras.ExportarINI(const Arquivo: string);
+var
+  SL: TStringList;
+  i: Integer;
+  R: TRegraMascara;
+begin
+  SL := TStringList.Create;
+  try
+    for i := 0 to Count - 1 do
+    begin
+      R := TRegraMascara(Items[i]);
+      SL.Add('[' + IntToStr(i + 1) + ']');
+      SL.Add('Campo=' + R.Campo);
+      SL.Add('Tabela=' + R.Tabela);
+      SL.Add('DisplayFormat=' + R.DisplayFormat);
+      SL.Add('EditFormat=' + R.EditFormat);
+      SL.Add('');
+    end;
+    SL.SaveToFile(Arquivo);
+  finally
+    SL.Free;
+  end;
+end;
+
+procedure TListaRegras.ImportarCSV(const Arquivo: string);
+var
+  SL: TStringList;
+  i: Integer;
+  P: TStringArray;
+begin
+  SL := TStringList.Create;
+  try
+    SL.LoadFromFile(Arquivo);
+    Clear;
+    // espera cabeçalho na primeira linha: Campo;Tabela;DisplayFormat;EditFormat
+    for i := 1 to SL.Count - 1 do
+    begin
+      P := SL[i].Split([';']);
+      if Length(P) >= 4 then
+        Adicionar(P[1], P[0], P[2], P[3]); // Tabela, Campo, Display, Edit
+    end;
+  finally
+    SL.Free;
+  end;
+end;
+
+procedure TListaRegras.ImportarINI(const Arquivo: string);
+var
+  SL: TStringList;
+  i: Integer;
+  Campo, Tabela, Disp, Edit: string;
+begin
+  SL := TStringList.Create;
+  try
+    SL.LoadFromFile(Arquivo);
+    Clear;
+    Campo := ''; Tabela := ''; Disp := ''; Edit := '';
+    for i := 0 to SL.Count - 1 do
+    begin
+      if Pos('Campo=', SL[i]) = 1 then Campo := Copy(SL[i], 7, MaxInt);
+      if Pos('Tabela=', SL[i]) = 1 then Tabela := Copy(SL[i], 8, MaxInt);
+      if Pos('DisplayFormat=', SL[i]) = 1 then Disp := Copy(SL[i], 14, MaxInt);
+      if Pos('EditFormat=', SL[i]) = 1 then
+      begin
+        Edit := Copy(SL[i], 12, MaxInt);
+        Adicionar(Tabela, Campo, Disp, Edit);
+        Campo := ''; Tabela := ''; Disp := ''; Edit := '';
+      end;
+    end;
+  finally
+    SL.Free;
+  end;
+end;
+
+procedure TListaRegras.Salvar(const Arquivo: string);
+begin
+  ExportarINI(Arquivo);
+end;
+
+procedure TListaRegras.Carregar(const Arquivo: string);
+begin
+  ImportarINI(Arquivo);
 end;
 
 { TMaskManager }
@@ -160,7 +284,7 @@ begin
   FDataSets.Add(Info);
 end;
 
-procedure TMaskManager.ApplyFormatsToField(f: TField; const DisplayFmt, EditFmt: string);
+procedure TMaskManager.AplicarFormatos(f: TField; const DisplayFmt, EditFmt: string);
 begin
   if f is TFloatField then
   begin
@@ -185,19 +309,24 @@ var
   regra: TRegraMascara;
   i, k: Integer;
   Info: TDataSetInfo;
+  DSNameUpper, FieldUpper: string;
 begin
   // aplica máscara padrão
   for f in DataSet.Fields do
-    ApplyFormatsToField(f, FMascaraPadraoDisplay, FMascaraPadraoEdit);
+    AplicarFormatos(f, FMascaraPadraoDisplay, FMascaraPadraoEdit);
+
+  // normaliza nome do DataSet para comparação
+  DSNameUpper := UpperCase(Trim(DataSet.Name));
 
   // aplica regras específicas
   for f in DataSet.Fields do
   begin
+    FieldUpper := UpperCase(Trim(f.FieldName));
     for k := 0 to FRegras.Count - 1 do
     begin
       regra := TRegraMascara(FRegras.Items[k]);
-      if SameText(regra.Tabela, DataSet.Name) and SameText(regra.Campo, f.FieldName) then
-        ApplyFormatsToField(f, regra.DisplayFormat, regra.EditFormat);
+      if (regra.Tabela = DSNameUpper) and (regra.Campo = FieldUpper) then
+        AplicarFormatos(f, regra.DisplayFormat, regra.EditFormat);
     end;
   end;
 
@@ -220,3 +349,4 @@ begin
 end;
 
 end.
+

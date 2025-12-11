@@ -1,0 +1,119 @@
+object RegrasEditorForm: TRegrasEditorForm
+  Left = 328
+  Height = 459
+  Top = 107
+  Width = 542
+  Caption = 'RegrasEditorForm'
+  ClientHeight = 459
+  ClientWidth = 542
+  object lvRegras: TListView
+    Left = 0
+    Height = 380
+    Top = 0
+    Width = 542
+    Align = alTop
+    Columns = <    
+      item
+        Caption = 'Campo'
+        Width = 150
+      end    
+      item
+        Caption = 'Tabela'
+        Width = 120
+      end    
+      item
+        Caption = 'DisplayFormat'
+        Width = 100
+      end    
+      item
+        Caption = 'EditFormat'
+        Width = 100
+      end>
+    HideSelection = False
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 0
+    ViewStyle = vsReport
+  end
+  object BtnAdicionar: TButton
+    Left = 8
+    Height = 25
+    Top = 389
+    Width = 96
+    Caption = 'Adicionar'
+    TabOrder = 1
+    OnClick = btnAdicionarClick
+  end
+  object BtnEditar: TButton
+    Left = 112
+    Height = 25
+    Top = 389
+    Width = 97
+    Caption = 'Editar'
+    TabOrder = 2
+    OnClick = BtnEditarClick
+  end
+  object BtnRemover: TButton
+    Left = 217
+    Height = 25
+    Top = 389
+    Width = 96
+    Caption = 'Remover'
+    TabOrder = 3
+    OnClick = BtnRemoverClick
+  end
+  object BtnOrdenarCampo: TButton
+    Left = 320
+    Height = 25
+    Top = 389
+    Width = 97
+    Caption = 'Ordenar Campo'
+    TabOrder = 4
+    OnClick = BtnOrdenarCampoClick
+  end
+  object BtnExportarCSV: TButton
+    Left = 7
+    Height = 25
+    Top = 424
+    Width = 97
+    Caption = 'Exportar CSV'
+    TabOrder = 5
+    OnClick = BtnExportarCSVClick
+  end
+  object BtnExportarINI: TButton
+    Left = 112
+    Height = 25
+    Top = 424
+    Width = 97
+    Caption = 'Exportar INI'
+    TabOrder = 6
+    OnClick = BtnExportarINIClick
+  end
+  object BtnImportarCSV: TButton
+    Left = 216
+    Height = 25
+    Top = 424
+    Width = 97
+    Caption = 'Importar CSV'
+    TabOrder = 7
+    OnClick = BtnImportarCSVClick
+  end
+  object BtnImportarINI: TButton
+    Left = 320
+    Height = 25
+    Top = 424
+    Width = 97
+    Caption = 'Importar INI'
+    TabOrder = 8
+    OnClick = BtnImportarINIClick
+  end
+  object BtnFechar: TButton
+    Left = 432
+    Height = 25
+    Top = 424
+    Width = 97
+    Caption = 'Fechar'
+    TabOrder = 9
+    OnClick = BtnFecharClick
+  end
+end

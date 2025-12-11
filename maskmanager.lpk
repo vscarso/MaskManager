@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <PathDelim Value="\"/>
+    <Name Value="MaskManager"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files>
+      <Item>
+        <Filename Value="uselecionarcampo.pas"/>
+        <UnitName Value="uSelecionarCampo"/>
+      </Item>
+      <Item>
+        <Filename Value="uMaskManager.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="uMaskManager"/>
+      </Item>
+      <Item>
+        <Filename Value="uMaskManagerEditor.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="uMaskManagerEditor"/>
+      </Item>
+      <Item>
+        <Filename Value="uregraseditorform.pas"/>
+        <UnitName Value="uRegrasEditorForm"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
