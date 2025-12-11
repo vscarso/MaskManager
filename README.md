@@ -1,88 +1,63 @@
-📘 TMaskManager
-Autor: Vitor Scarso Licença: MIT
+# TMaskManager
 
-✨ Descrição
-O TMaskManager é um componente para Lazarus que aplica máscaras de exibição (DisplayFormat) e máscaras de edição (EditFormat) em campos numéricos (Float, BCD, FMTBCD) de datasets (TZQuery, TQuery, etc.) de forma centralizada e automática.
+Componente para Lazarus/FPC criado por **Vitor Scarso**.  
+Objetivo: aplicar automaticamente `DisplayFormat` e `EditFormat` em campos numéricos de `TDataSet`, com regras configuráveis por DataSet + FieldName.
 
-Ele simplifica a manutenção de projetos com muitas queries, evitando configurar máscaras campo por campo.
+## ✨ Funcionalidades
 
-🚀 Funcionalidades
-✅ Máscara padrão para todos os campos numéricos.
+- Aplica máscaras de exibição/edição em campos numéricos (`TFloatField`, `TBCDField`, `TFMTBCDField`).
+- Regras configuráveis por **nome do componente DataSet** + **FieldName** (case-insensitive).
+- Máscaras padrão configuráveis (`MascaraPadraoDisplay`, `MascaraPadraoEdit`).
+- Editor visual integrado ao Lazarus (Object Inspector).
+- Exportação e importação de regras em **CSV** e **INI**.
+- Ordenação de regras por campo ou por tabela.
 
-✅ Regras específicas por DataSet + Campo.
+## 📦 Instalação
 
-✅ Exibição amigável no Object Inspector: cada regra aparece como Campo (Tabela).
+1. Adicione as units ao seu projeto/pacote:
+   - `uMaskManager.pas`
+   - `uMaskManagerEditor.pas`
+   - `uRegrasEditorForm.pas`
+2. Instale o pacote no Lazarus.
+3. O componente aparecerá na paleta **VSComponents**.
 
-✅ Métodos de ordenação (SortByCampo e SortByTabela) para organizar a lista de regras.
+## 🛠️ Uso
 
-✅ Aplicação automática ao abrir o dataset (sem precisar chamar manualmente).
+1. Coloque um `TMaskManager` no seu Form ou DataModule.
+2. Registre os DataSets que devem receber máscaras:
+   ```pascal
+   MaskManager.RegistrarDataSet(FDNfeItens);
+   MaskManager.RegistrarDataSet(FDProdutos);
+Configure as regras pelo Object Inspector:
 
-✅ Encadeamento de eventos: não sobrescreve o AfterOpen original do dataset.
+Propriedade Regras → abre o editor visual.
 
-✅ Suporte a DisplayFormat e EditFormat (visualização e edição).
+Informe o nome do componente DataSet (ex.: FDNfeItens) e o campo (ex.: VALORTOTAL).
 
-⚙️ Instalação
-Crie um arquivo chamado uMaskManager.pas e cole o código da unit.
+Defina DisplayFormat e EditFormat.
 
-No Lazarus, vá em Pacotes → Novo pacote.
+Ao abrir o DataSet (AfterOpen), o TMaskManager aplica automaticamente as máscaras.
 
-Adicione a unit uMaskManager.pas ao pacote.
+📂 Exportação/Importação
+CSV: gera arquivo com colunas Campo;Tabela;DisplayFormat;EditFormat.
 
-Compile e instale o pacote.
+INI: gera arquivo com seções numeradas e chaves Campo, Tabela, DisplayFormat, EditFormat.
 
-O componente TMaskManager aparecerá na paleta VSComponents.
-
-🔧 Propriedades
-MascaraPadraoDisplay Define a máscara padrão aplicada a todos os campos numéricos para exibição. Exemplo: #,##0.00.
-
-MascaraPadraoEdit Define a máscara padrão aplicada a todos os campos numéricos para edição. Exemplo: 0.00.
-
-Regras Coleção de regras específicas. Cada regra possui:
-
-Tabela: Name do componente DataSet no Lazarus (ex.: FDNfeItens). ⚠️ Importante: não é o nome da tabela do banco de dados, mas sim o Name do componente no Object Inspector.
-
-Campo: nome do campo (FieldName) exatamente como aparece no FieldsEditor ou no DBGrid.
-
-DisplayFormat: máscara de exibição (ex.: #,##0.000).
-
-EditFormat: máscara de edição (ex.: 0.###).
-
-📋 Métodos
-RegistrarDataSet(ADataSet: TDataSet) Registra um dataset para que o MaskManager aplique máscaras nele. O componente intercepta o AfterOpen e aplica as regras automaticamente.
-
-SortByCampo Ordena a lista de regras pelo nome do campo.
-
-SortByTabela Ordena a lista de regras pelo nome da tabela (Name do componente).
-
-🧑‍💻 Exemplo de uso
+📋 Exemplo
 pascal
-procedure TDataModule1.DataModuleCreate(Sender: TObject);
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // Configuração padrão
-  MaskManager1.MascaraPadraoDisplay := '#,##0.00';
-  MaskManager1.MascaraPadraoEdit := '0.00';
+  MaskManager.RegistrarDataSet(FDNfeItens);
 
-  // Regras específicas
-  MaskManager1.Regras.AddRegra('FDNfeItens', 'QTD', '0.000', '0.###');
-  MaskManager1.Regras.AddRegra('FDNfe', 'VALORALIQUOTA', '#,##0.0000', '0.0000');
-  MaskManager1.Regras.AddRegra('FDNfeItens', 'VALIQPRODCOFINS', '0.0000', '0.####');
-
-  // Registrar datasets (Name do componente, não nome da tabela)
-  MaskManager1.RegistrarDataSet(FDNfe);
-  MaskManager1.RegistrarDataSet(FDNfeItens);
-
-  // Ordenar regras por campo
-  MaskManager1.Regras.SortByCampo;
+  // Adiciona regra manualmente
+  MaskManager.Regras.Adicionar('FDNfeItens', 'VALORTOTAL', '#,##0.00', '0.00');
 end;
-🎯 Benefícios
-Centralização: todas as máscaras ficam em um único componente.
+⚠️ Observações
+Os nomes de DataSet e campos são tratados sem diferença de maiúsculas/minúsculas.
 
-Flexibilidade: regras específicas por DataSet + Campo.
+Caracteres como _ são preservados (IMPOSTO_IBSUF funciona normalmente).
 
-Manutenção fácil: lista amigável no Object Inspector (Campo (Tabela)).
+Se o campo estiver nulo, o DisplayFormat não substitui por 0. Para isso, use DEFAULT 0 no banco ou o evento OnGetText do campo.
 
-Organização: ordenação por campo ou tabela.
-
-Automático: não precisa mais chamar AplicarMascaras manualmente.
-
-Completo: suporta DisplayFormat e EditFormat.
+📜 Licença
+Este projeto é distribuído sob a licença MIT. Sinta-se livre para usar, modificar e compartilhar.
